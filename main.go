@@ -13,6 +13,8 @@ func main() {
 	fmt.Println("Hello World")
 	mux := http.NewServeMux()
 	corsMux := middlewareCors(mux)
+	mux.Handle("/", http.FileServer(http.Dir("./static")))
+	mux.Handle("/hello_world", http.HandlerFunc(helloWorldHandler))
 
 	srv := &http.Server{
 		Addr:    port,
@@ -34,4 +36,20 @@ func middlewareCors(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// example using http.ServeFile and handlerFunc
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	// serve files from static folder
+	// return 200 status code
+	http.ServeFile(w, r, "./static/index.html")
+}
+
+func helloWorldHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("<h1>Hello World</h1>"))
 }
