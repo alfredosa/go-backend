@@ -1,9 +1,7 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"time"
 )
 
 func middlewareCors(next http.Handler) http.Handler {
@@ -11,12 +9,11 @@ func middlewareCors(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Cache-Control", "no-cache")
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		start := time.Now()
-		log.Printf("%s %s %s", r.Method, r.RequestURI, time.Since(start))
 		next.ServeHTTP(w, r)
 
 	})
