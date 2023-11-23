@@ -1,3 +1,3 @@
-module alfredosa/go-backend
+module github.com/alfredosa/go-backend
 
 go 1.20
