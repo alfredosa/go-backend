@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	const port string = ":8000"
+	const port string = ":8080"
 	const staticDir string = "./static/"
 
 	api_config := apiConfig{

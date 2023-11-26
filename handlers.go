@@ -71,24 +71,68 @@ func FileServer(r chi.Router, path string, root http.FileSystem, api_config *api
 }
 
 func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
-	type validatePost struct {
-		Body string
+	type parameters struct {
+		Body string `json:"body"`
+	}
+	type returnVals struct {
+		CleanedBody string `json:"cleaned_body"`
 	}
 
-	var response validatePost
-	err := json.NewDecoder(r.Body).Decode(&response)
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
 
-	if len(response.Body) > 140 {
-		w.WriteHeader(http.StatusBadRequest)
+	const maxChirpLength = 140
+	if len(params.Body) > maxChirpLength {
+		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
 		return
 	}
 
+	respondWithJSON(w, http.StatusOK, returnVals{
+		CleanedBody: cleanedBody(params.Body),
+	})
+
+}
+
+func respondWithError(w http.ResponseWriter, code int, msg string) {
+	if code > 499 {
+		log.Printf("Responding with 5XX error: %s", msg)
+	}
+	type errorResponse struct {
+		Error string `json:"error"`
+	}
+	respondWithJSON(w, code, errorResponse{
+		Error: msg,
+	})
+}
+
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`"valid":true`))
+	dat, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("Error marshalling JSON: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	w.WriteHeader(code)
+	w.Write(dat)
+}
 
+func cleanedBody(payload string) string {
+	badWords := []string{"kerfuffle", "sharbert", "fornax"}
+	words := strings.Fields(payload)
+
+	for _, badWord := range badWords {
+		for i := range words {
+			if strings.EqualFold(words[i], badWord) {
+				words[i] = "****"
+			}
+		}
+	}
+
+	return strings.Join(words, " ")
 }
