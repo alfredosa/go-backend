@@ -38,6 +38,7 @@ func main() {
 	r.Mount("/admin", adminRouter)
 
 	log.Printf("Serving on Port: %s\n", port)
-	http.ListenAndServe(port, r)
+	
+	log.Fatal(http.ListenAndServe(port, r))	
 
 }
