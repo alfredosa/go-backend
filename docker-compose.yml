@@ -16,7 +16,7 @@ services:
   go:
     build:
       dockerfile: Dockerfile
-      context: .
+      context: app/
     ports:
       - 8080:8080
 
