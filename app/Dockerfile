@@ -19,6 +19,7 @@ FROM gcr.io/distroless/base-debian11 AS build-release-stage
 WORKDIR /
 
 COPY --from=build-stage /go-backend /go-backend
+# TODO just move assets, unecessary to copy project after binary
 COPY . .
 
 EXPOSE 8080

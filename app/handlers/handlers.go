@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -10,22 +10,22 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type apiConfig struct {
-	fileServerHitCount int
+type ApiConfig struct {
+	FileServerHitCount int
 }
 
-func (a *apiConfig) incrementFileServerHitCount(next http.Handler) http.Handler {
+func (a *ApiConfig) incrementFileServerHitCount(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		a.fileServerHitCount++
-		log.Printf("printing COUNT: %d", a.fileServerHitCount)
+		a.FileServerHitCount++
+		log.Printf("printing COUNT: %d", a.FileServerHitCount)
 		next.ServeHTTP(w, r)
 	})
 }
 
-func (a *apiConfig) metricsHandler(w http.ResponseWriter, r *http.Request) {
+func (a *ApiConfig) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	log.Printf("HITS: %d", a.fileServerHitCount)
+	log.Printf("HITS: %d", a.FileServerHitCount)
 
 	html := `
     <html>
@@ -35,23 +35,23 @@ func (a *apiConfig) metricsHandler(w http.ResponseWriter, r *http.Request) {
     </body>
     </html>
     `
-	w.Write([]byte(fmt.Sprintf(html, a.fileServerHitCount)))
+	w.Write([]byte(fmt.Sprintf(html, a.FileServerHitCount)))
 
 }
 
-func (a *apiConfig) resetHandler(w http.ResponseWriter, r *http.Request) {
-	a.fileServerHitCount = 0
+func (a *ApiConfig) ResetHandler(w http.ResponseWriter, r *http.Request) {
+	a.FileServerHitCount = 0
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Reset"))
 }
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
+func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(http.StatusText(http.StatusOK)))
 }
 
-func FileServer(r chi.Router, path string, root http.FileSystem, api_config *apiConfig) {
+func FileServer(r chi.Router, path string, root http.FileSystem, api_config *ApiConfig) {
 	if strings.ContainsAny(path, "{}*") {
 		panic("FileServer does not permit any URL parameters.")
 	}
@@ -70,7 +70,7 @@ func FileServer(r chi.Router, path string, root http.FileSystem, api_config *api
 	})
 }
 
-func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
+func ValidateChirpHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Body string `json:"body"`
 	}
@@ -82,35 +82,35 @@ func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		RespondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
 		return
 	}
 
 	const maxChirpLength = 140
 	if len(params.Body) > maxChirpLength {
-		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
+		RespondWithError(w, http.StatusBadRequest, "Chirp is too long")
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, returnVals{
-		CleanedBody: cleanedBody(params.Body),
+	RespondWithJSON(w, http.StatusOK, returnVals{
+		CleanedBody: CleanedBody(params.Body),
 	})
 
 }
 
-func respondWithError(w http.ResponseWriter, code int, msg string) {
+func RespondWithError(w http.ResponseWriter, code int, msg string) {
 	if code > 499 {
 		log.Printf("Responding with 5XX error: %s", msg)
 	}
 	type errorResponse struct {
 		Error string `json:"error"`
 	}
-	respondWithJSON(w, code, errorResponse{
+	RespondWithJSON(w, code, errorResponse{
 		Error: msg,
 	})
 }
 
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	dat, err := json.Marshal(payload)
 	if err != nil {
@@ -122,7 +122,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(dat)
 }
 
-func cleanedBody(payload string) string {
+func CleanedBody(payload string) string {
 	badWords := []string{"kerfuffle", "sharbert", "fornax"}
 	words := strings.Fields(payload)
 
