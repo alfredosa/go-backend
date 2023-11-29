@@ -11,7 +11,6 @@ func main() {
 	r := routers.Routers()
 
 	log.Printf("Serving on Port: %s\n", port)
-
 	log.Fatal(http.ListenAndServe(port, r))
 
 }
