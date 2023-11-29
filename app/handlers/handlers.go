@@ -8,10 +8,12 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jmoiron/sqlx"
 )
 
 type ApiConfig struct {
 	FileServerHitCount int
+	DB                 *sqlx.DB
 }
 
 func (a *ApiConfig) incrementFileServerHitCount(next http.Handler) http.Handler {
@@ -45,13 +47,13 @@ func (a *ApiConfig) ResetHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Reset"))
 }
 
-func HealthHandler(w http.ResponseWriter, r *http.Request) {
+func (a *ApiConfig) HealthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(http.StatusText(http.StatusOK)))
 }
 
-func FileServer(r chi.Router, path string, root http.FileSystem, api_config *ApiConfig) {
+func (a *ApiConfig) FileServer(r chi.Router, path string, root http.FileSystem, api_config *ApiConfig) {
 	if strings.ContainsAny(path, "{}*") {
 		panic("FileServer does not permit any URL parameters.")
 	}
@@ -70,7 +72,7 @@ func FileServer(r chi.Router, path string, root http.FileSystem, api_config *Api
 	})
 }
 
-func ValidateChirpHandler(w http.ResponseWriter, r *http.Request) {
+func (a *ApiConfig) ValidateChirpHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Body string `json:"body"`
 	}

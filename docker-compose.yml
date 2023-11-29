@@ -13,12 +13,12 @@ services:
     ports:
       - 5432:5432
 
-  go:
-    build:
-      dockerfile: Dockerfile
-      context: app/
-    ports:
-      - 8080:8080
+  # go:
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: app/
+  #   ports:
+  #     - 8080:8080
 
 volumes:
   db_data:
