@@ -13,13 +13,13 @@ import (
 
 func main() {
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 
 	db := sqlx.MustConnect("postgres", "user=postgres password=postgres dbname=postgres sslmode=disable")
 
 	go func() {
-		<-sigs
-
+		sig := <-sigs
+		log.Printf("\n Received an interrupt, stopping services... Signal: %v", sig)
 		db.Close()
 		log.Printf("Closed DB Connection")
 
